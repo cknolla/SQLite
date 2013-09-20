@@ -1,22 +1,68 @@
 #include "Database.h"
 
-Database::Database() 
+Database::Database(const char* dbfile) 
 {
-	database = 0;
-}
-
-Database::Database(char* dbfile) 
-{
-	sqlite3* db = 0;
-	int rc; // return code
-	rc = loadOrSave(db, dbfile, false);
+	int rc = 1; // return code
+	rc = sqlite3_open(dbfile, &database);
+//	rc = loadOrSave(db, dbfile, false);
 	// anything other than 0 returned is an error code
 	if(rc) {
-		printf("There was an error loading the database: \n%s\n", sqlite3_errmsg(db));
+		printf("There was an error loading the database: \n%s\n", sqlite3_errmsg(database));
 	} else {
-		database = db;
 		printf("Database loaded successfully\n");
 	}
+}
+
+Database::~Database() 
+{
+	if(database)
+		sqlite3_close(database);
+}
+
+/*
+int Database::dml(const char* sql) 
+{
+	sqlite3_stmt* statement;
+	int rc = 1;
+
+	rc = sqlite3_prepare_v2(database, sql, -1, &statement, 0);
+	if(rc) {
+		printf("***\nThere was a DML statement error:\nStatement: %s\nError: %s\n***\n", sql, sqlite3_errmsg(database));
+	} else {
+		printf("DML statement accepted\n");
+	}
+
+	rc = sqlite3_finalize(statement);
+	if(rc) {
+		printf("There was an error finalizing a DML statement:\nStatement: %s\nError: %s\n", sql, sqlite3_errmsg(database));
+	}
+	return rc;
+}
+*/
+vector<vector<string>> Database::query(const char* sql)
+{
+	sqlite3_stmt* statement;
+	vector<vector<string>> results;
+	int rc = 1;
+
+	rc = sqlite3_prepare_v2(database, sql, -1, &statement, 0);
+	if(rc) {
+		printf("There was a query statement error:\nStatement: %s\nError: %s\n", sql, sqlite3_errmsg(database));
+	} else {
+		printf("Query statement accepted\n");
+		int cols = sqlite3_column_count(statement);
+		int result = 0;
+		while((result = sqlite3_step(statement)) == SQLITE_ROW) {
+			vector<string> values;
+			for(int col = 0; col < cols; col++) {
+				values.push_back((char*) sqlite3_column_text(statement, col));
+			//	printf("\n%s\n", *results);
+			}
+			results.push_back(values);
+		}
+		rc = sqlite3_finalize(statement);
+	}
+	return results;
 }
 
 int Database::loadOrSave(sqlite3 *pInMemory, const char *zFilename, bool isSave)
