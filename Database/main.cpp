@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include "Database.h"
 
 int main() {
-	printf("Hello");
+	Database* db = new Database("test.db");
+	scanf("%*c");
 	return 0;
 }
