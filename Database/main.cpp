@@ -5,13 +5,13 @@ int main() {
 	Database* db = new Database("test.db");
 	char name[100];
 	int hp = 0;
-	const char* result;
+	string result;
 
 	db->dml("drop table monster;");
 	db->importTable("tables/monster.csv");
 	db->query("select * from monster;");
-	while(result = db->getNextRow("?")) {
-		printf("%s\n", result);
+	for(result = db->getNextRow(); !result.empty(); result = db->getNextRow()) {
+		printf("%s\n", result.c_str());
 	}
 
 	/* // store values into typed variables

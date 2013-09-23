@@ -27,23 +27,23 @@ Database::~Database()
 }
 
 
-int Database::dml(const char* sql) 
+int Database::dml(string sql) 
 {
 	int rc = 1;
 
-	rc = sqlite3_prepare_v2(database, sql, -1, &stmt, 0);
+	rc = sqlite3_prepare_v2(database, sql.c_str(), -1, &stmt, 0);
 	if(rc != SQLITE_OK) {
-		printf("***\nThere was a DML statement error:\nStatement: %s\nError: %s\n***\n", sql, sqlite3_errmsg(database));
+		printf("***\nThere was a DML statement error:\nStatement: %s\nError: %s\n***\n", sql.c_str(), sqlite3_errmsg(database));
 	} else {
 		printf("DML statement accepted\n");
 		rc = sqlite3_step(stmt);
 		if(rc != SQLITE_DONE) {
-			printf("***\nThere was a DML step error:\nStatement: %s\nError: %s\n***\n", sql, sqlite3_errmsg(database));
+			printf("***\nThere was a DML step error:\nStatement: %s\nError: %s\n***\n", sql.c_str(), sqlite3_errmsg(database));
 		} else {
 			rc = sqlite3_finalize(stmt);
 			stmt = 0;
 			if(rc != SQLITE_OK) {
-				printf("There was an error finalizing a DML statement:\nStatement: %s\nError: %s\n", sql, sqlite3_errmsg(database));
+				printf("There was an error finalizing a DML statement:\nStatement: %s\nError: %s\n", sql.c_str(), sqlite3_errmsg(database));
 			}
 		}
 	}
@@ -52,16 +52,16 @@ int Database::dml(const char* sql)
 
 
 
-int Database::query(const char* sql)
+int Database::query(string sql)
 {
 	// close stmt if it's already open
 	if(stmt) {
 		sqlite3_finalize(stmt);
 		stmt = 0;
 	}
-	int rc = sqlite3_prepare_v2(database, sql, -1, &stmt, 0);
+	int rc = sqlite3_prepare_v2(database, sql.c_str(), -1, &stmt, 0);
 	if(rc) {
-		printf("There was a query statement error:\nStatement: %s\nError: %s\n", sql, sqlite3_errmsg(database));
+		printf("There was a query statement error:\nStatement: %s\nError: %s\n", sql.c_str(), sqlite3_errmsg(database));
 	} else {
 		printf("Query statement accepted\n");
 		columnCount = sqlite3_column_count(stmt);
@@ -89,29 +89,29 @@ char* Database::getNextResult()
 	return result;
 }
 
-const char* Database::getNextRow(string delim)
+string Database::getNextRow(string delim)
 {
 	resultStr.clear();
 	int columns = sqlite3_column_count(stmt); // TODO prepared?
 	int col = 0;
 	if(sqlite3_step(stmt) == SQLITE_ROW) {
 		for(col = 0; col < columns; col++) {
-			resultStr.append((char*) sqlite3_column_text(stmt, col));
-			resultStr.append(delim);
+			// add the next column and a delimiter
+			resultStr.append(((char*) sqlite3_column_text(stmt, col)) + delim);
 		}
 		resultStr.erase(resultStr.length()-delim.length(), resultStr.length()); // remove the last delimiter
 	} else {
 	//	printf("There was an error getting the next row:\nError: %s\n", sqlite3_errmsg(database));
-		return 0;
+		return "";
 	}
-	return resultStr.c_str();
+	return resultStr;
 }
 
 int Database::importTable(string filename)
 {
 	int rc = 1;
 
-	ifstream tFile(filename);
+	ifstream tFile(filename.c_str());
 	// remove the file extension
 	string tableName = filename.erase(filename.length()-4, filename.length()-1);
 	// remove the path
@@ -126,7 +126,7 @@ int Database::importTable(string filename)
 	// the first line is the table creation line with column names
 	getline(tFile, line, '\n');
 	sql = "CREATE TABLE " + tableName + "(" + line + ");";
-	rc = dml(sql.c_str());
+	rc = dml(sql);
 	if(rc != SQLITE_OK)
 		return rc;
 /*	strBuilder = line;
@@ -161,7 +161,7 @@ int Database::importTable(string filename)
 		strBuilder.append("'" + line.substr(prevPos, line.npos) + "'");
 		sql = "INSERT INTO " + tableName + " VALUES(" + strBuilder + ");";
 		printf("%s\n", sql.c_str());
-		rc = dml(sql.c_str());
+		rc = dml(sql);
 	}
 
 	return rc;

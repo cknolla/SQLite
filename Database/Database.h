@@ -27,14 +27,14 @@ public:
 	~Database();
 
 	// Non-query statements (not needing to return anything)
-	int dml(const char* sql);
+	int dml(string sql);
 
 	// select statements
-	int query(const char* sql);
+	int query(string sql);
 
 	// retrieve a single result from the last query
 	char* getNextResult();
-	const char* getNextRow(string delim = "|");
+	string getNextRow(string delim = "|");
 
 	// import a table from a CSV file; returns 0 on success
 	int importTable(string filename);
