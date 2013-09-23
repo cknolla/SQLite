@@ -2,7 +2,7 @@
 #define DATABASE_H
 
 #include <stdio.h>
-#include <vector>
+#include <fstream>
 #include <string>
 #include "sqlite3.h"
 
@@ -12,6 +12,14 @@ class Database {
 private:
 	// primary database connection
 	sqlite3 *database;
+	// single statement that could be open for querying. gets closed on requery and deconstruct
+	sqlite3_stmt* stmt;
+	// string result when getNextResult() is called
+	char* result;
+	string resultStr;
+	// vars which keep track of which column was returned last
+	int curColumn;
+	int columnCount;
 
 public:
 	// construct using the provided filename as database connection
@@ -19,10 +27,17 @@ public:
 	~Database();
 
 	// Non-query statements (not needing to return anything)
-//	int dml(const char* sql);
+	int dml(const char* sql);
 
 	// select statements
-	vector<vector<string>> query(const char* sql);
+	int query(const char* sql);
+
+	// retrieve a single result from the last query
+	char* getNextResult();
+	const char* getNextRow(string delim = "|");
+
+	// import a table from a CSV file; returns 0 on success
+	int importTable(string filename);
 
 	// load or save a db from/to a file
 	int loadOrSave(sqlite3 *pInMemory, const char *zFilename, bool isSave);

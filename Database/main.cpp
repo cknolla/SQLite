@@ -4,13 +4,43 @@
 int main() {
 	Database* db = new Database("test.db");
 	char name[100];
-	char* pName = name;
-//	db->dml("create database
-//	db->query("create table names(one varchar2(10));", &pName);
-//	db->query("insert into names values('Hello');", &pName);
-	printf("\n%s\n", pName);
-	db->query("select * from names;");
-	printf("\n%s\n", name);
+	int hp = 0;
+	const char* result;
+
+	db->dml("drop table monster;");
+	db->importTable("tables/monster.csv");
+	db->query("select * from monster;");
+	while(result = db->getNextRow("?")) {
+		printf("%s\n", result);
+	}
+
+	/* // store values into typed variables
+	if(result)
+		strcpy(name, result);
+	else
+		printf("Name did not exist\n");
+	result = db->getNextResult();
+	if(result)
+		sscanf(result, "%d", &hp);
+	else
+		printf("hp did not exist\n");
+	printf("%s | %d", name, hp);
+	*/
+/*	db->dml("create table monster(name varchar2(100), hp number(20));");
+	db->dml("insert into monster values('Goblin', 150)");
+	db->dml("insert into monster values('Dragon', 2000)");
+	db->query("select * from monster;");
+	while(result = db->getNextResult()) {
+		printf("%s", result);
+	}
+	db->query("select * from monster;");
+	result = db->getNextResult();
+	strcpy(name, result);
+	result = db->getNextResult();
+	sscanf(result, "%d", &hp);
+	printf("%s | %d", name, hp);
+*/
+	
 	scanf("%*c");
 	return 0;
 }
