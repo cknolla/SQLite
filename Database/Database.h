@@ -15,15 +15,15 @@ private:
 	// single statement that could be open for querying. gets closed on requery and deconstruct
 	sqlite3_stmt* stmt;
 	// string result when getNextResult() is called
-	char* result;
-	string resultStr;
+//	char* result;
+	
 	// vars which keep track of which column was returned last
-	int curColumn;
-	int columnCount;
+//	int curColumn;
+//	int columnCount;
 
 public:
 	// construct using the provided filename as database connection
-	Database(const char* dbfile);
+	Database(string dbfile);
 	~Database();
 
 	// Non-query statements (not needing to return anything)
@@ -33,14 +33,14 @@ public:
 	int query(string sql);
 
 	// retrieve a single result from the last query
-	char* getNextResult();
+//	char* getNextResult();
 	string getNextRow(string delim = "|");
 
 	// import a table from a CSV file; returns 0 on success
 	int importTable(string filename);
 
 	// load or save a db from/to a file
-	int loadOrSave(sqlite3 *pInMemory, const char *zFilename, bool isSave);
+	int loadOrSave(sqlite3 *pInMemory, string zFilename, bool isSave);
 };
 
 #endif

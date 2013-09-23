@@ -1,4 +1,4 @@
-name varchar2(100),hp number(100)
-Goblin,150
-Dragon,500
-Coerl,200
+name varchar2(100),hp number(100),map varchar2(30)
+Goblin,150,dungeon
+Dragon,500,dungeon
+Coerl,200,desert

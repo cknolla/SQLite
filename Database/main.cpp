@@ -10,7 +10,7 @@ int main() {
 	db->dml("drop table monster;");
 	db->importTable("tables/monster.csv");
 	db->query("select * from monster;");
-	for(result = db->getNextRow(); !result.empty(); result = db->getNextRow()) {
+	while((result = db->getNextRow()) != "") {
 		printf("%s\n", result.c_str());
 	}
 

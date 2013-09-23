@@ -1,0 +1,1 @@
+name varchar2(100),description varchar2(200)

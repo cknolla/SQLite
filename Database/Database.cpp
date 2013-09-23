@@ -1,21 +1,20 @@
 #include "Database.h"
 
-Database::Database(const char* dbfile) 
+Database::Database(string dbfile) 
 {
 	int rc = 1; // return code
-	rc = sqlite3_open(dbfile, &database);
+	rc = sqlite3_open(dbfile.c_str(), &database);
 //	rc = loadOrSave(db, dbfile, false);
 	// anything other than 0 returned is an error code
-	if(rc) {
+	if(rc != SQLITE_OK) {
 		printf("There was an error loading the database: \n%s\n", sqlite3_errmsg(database));
 	} else {
 		printf("Database loaded successfully\n");
 	}
 	stmt = 0;
-	columnCount = 0;
-	curColumn = 0;
-	result = 0;
-	resultStr.clear();
+//	columnCount = 0;
+//	curColumn = 0;
+//	resultStr.clear();
 }
 
 Database::~Database() 
@@ -64,12 +63,12 @@ int Database::query(string sql)
 		printf("There was a query statement error:\nStatement: %s\nError: %s\n", sql.c_str(), sqlite3_errmsg(database));
 	} else {
 		printf("Query statement accepted\n");
-		columnCount = sqlite3_column_count(stmt);
-		curColumn = 0;
+//		columnCount = sqlite3_column_count(stmt);
+//		curColumn = 0;
 	}
 	return rc;
 }
-
+/* // for retrieving a single column rather than a whole row
 char* Database::getNextResult()
 {
 	int rowExists = SQLITE_ROW;
@@ -88,9 +87,10 @@ char* Database::getNextResult()
 	}
 	return result;
 }
-
+*/
 string Database::getNextRow(string delim)
 {
+	string resultStr;
 	resultStr.clear();
 	int columns = sqlite3_column_count(stmt); // TODO prepared?
 	int col = 0;
@@ -152,10 +152,10 @@ int Database::importTable(string filename)
 		int found;
 		int prevPos = 0;
 		printf("%s", line.c_str());
-		while((found = line.find(',', prevPos)) != -1) {
-			strBuilder.append("'" + line.substr(prevPos, found) + "',");
+		while((found = line.find(',', prevPos)) != line.npos) {
+			strBuilder.append("'" + line.substr(prevPos, found-prevPos) + "',");
 			prevPos = found+1;
-		//	printf("%d", prevPos);
+		//	printf("prevPos: %d\n", prevPos);
 		}
 		// add the last column
 		strBuilder.append("'" + line.substr(prevPos, line.npos) + "'");
@@ -167,7 +167,7 @@ int Database::importTable(string filename)
 	return rc;
 }
 
-int Database::loadOrSave(sqlite3 *pInMemory, const char *zFilename, bool isSave)
+int Database::loadOrSave(sqlite3 *pInMemory, string zFilename, bool isSave)
 {
   int rc;                   /* Function return code */
   sqlite3 *pFile;           /* Database connection opened on zFilename */
@@ -177,7 +177,7 @@ int Database::loadOrSave(sqlite3 *pInMemory, const char *zFilename, bool isSave)
 
   /* Open the database file identified by zFilename. Exit early if this fails
   ** for any reason. */
-  rc = sqlite3_open(zFilename, &pFile);
+  rc = sqlite3_open(zFilename.c_str(), &pFile);
   if( rc==SQLITE_OK ){
 
     /* If this is a 'load' operation (isSave==0), then data is copied
