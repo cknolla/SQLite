@@ -1,0 +1,4 @@
+name varchar2(100),hp number(100)
+Goblin,150
+Dragon,500
+Coerl,200
