@@ -11,9 +11,12 @@ using namespace std;
 class Database {
 private:
 	// primary database connection
-	sqlite3 *database;
+	sqlite3* database;
 	// single statement that could be open for querying. gets closed on requery and deconstruct
 	sqlite3_stmt* stmt;
+	// log verbosity: 0 = none, 1 = errors only, 2 = errors and warnings (default), 3 = everything
+	int verbosity;
+	FILE* logstream;
 	// string result when getNextResult() is called
 //	char* result;
 	
@@ -25,6 +28,9 @@ public:
 	// construct using the provided filename as database connection
 	Database(string dbfile);
 	~Database();
+
+	// log to print to (default is stdout), type is: 1 error, 2 warning, 3 other (matches verbosity)
+	void log(string message, int type);
 
 	// Non-query statements (not needing to return anything)
 	int dml(string sql);

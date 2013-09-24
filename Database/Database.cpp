@@ -12,6 +12,8 @@ Database::Database(string dbfile)
 		printf("Database loaded successfully\n");
 	}
 	stmt = 0;
+	verbosity = 2;
+	logstream = stdout;
 //	columnCount = 0;
 //	curColumn = 0;
 //	resultStr.clear();
@@ -23,6 +25,19 @@ Database::~Database()
 		sqlite3_finalize(stmt);
 	if(database)
 		sqlite3_close(database);
+}
+
+void Database::log(string message, int type)
+{
+	if(type == 1 && verbosity >= 1) {
+		fprintf(logstream, "***\nError in database statement:\nStatement: %s\nError: %s\n", message.c_str(), sqlite3_errmsg(database));
+	}
+	if(type == 2 && verbosity >= 2) {
+		fprintf(logstream, "***\nWarning for database statement:\nStatement: %s\n", message.c_str());
+	}
+	if(type == 3 && verbosity >= 3) {
+		fprintf(logstream, message.c_str());
+	}
 }
 
 
@@ -60,9 +75,9 @@ int Database::query(string sql)
 	}
 	int rc = sqlite3_prepare_v2(database, sql.c_str(), -1, &stmt, 0);
 	if(rc) {
-		printf("There was a query statement error:\nStatement: %s\nError: %s\n", sql.c_str(), sqlite3_errmsg(database));
+		log(sql, 1);
 	} else {
-		printf("Query statement accepted\n");
+		log("Query statement accepted\n", 3);
 //		columnCount = sqlite3_column_count(stmt);
 //		curColumn = 0;
 	}
@@ -127,8 +142,10 @@ int Database::importTable(string filename)
 	getline(tFile, line, '\n');
 	sql = "CREATE TABLE " + tableName + "(" + line + ");";
 	rc = dml(sql);
-	if(rc != SQLITE_OK)
+	if(rc != SQLITE_OK) {
+		printf("There was an error during import of table %s:\nStatement: %s\nError: %s\n", filename.c_str(), sql.c_str(), sqlite3_errmsg(database));
 		return rc;
+	}
 /*	strBuilder = line;
 	while(strBuilder.find(',') != -1) {
 		strBuilder = strBuilder.erase(0, strBuilder.find(',')+1);
@@ -162,6 +179,10 @@ int Database::importTable(string filename)
 		sql = "INSERT INTO " + tableName + " VALUES(" + strBuilder + ");";
 		printf("%s\n", sql.c_str());
 		rc = dml(sql);
+		if(rc != SQLITE_OK) {
+			printf("There was an error during import of table %s:\nStatement: %s\nError: %s\n", filename.c_str(), sql.c_str(), sqlite3_errmsg(database));
+			return rc;
+		}
 	}
 
 	return rc;
