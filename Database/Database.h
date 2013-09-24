@@ -24,13 +24,15 @@ private:
 //	int curColumn;
 //	int columnCount;
 
+	enum MSGTYPE {STANDARD_ERROR, CUSTOM_ERROR, WARNING, OTHER};
+
+	// log to print to (default is stdout), type is: 1 error, 2 warning, 3 other (matches verbosity)
+	void log(string message, int type);
+
 public:
 	// construct using the provided filename as database connection
 	Database(string dbfile);
 	~Database();
-
-	// log to print to (default is stdout), type is: 1 error, 2 warning, 3 other (matches verbosity)
-	void log(string message, int type);
 
 	// Non-query statements (not needing to return anything)
 	int dml(string sql);

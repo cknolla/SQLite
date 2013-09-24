@@ -3,20 +3,16 @@
 Database::Database(string dbfile) 
 {
 	int rc = 1; // return code
-	rc = sqlite3_open(dbfile.c_str(), &database);
-//	rc = loadOrSave(db, dbfile, false);
-	// anything other than 0 returned is an error code
-	if(rc != SQLITE_OK) {
-		printf("There was an error loading the database: \n%s\n", sqlite3_errmsg(database));
-	} else {
-		printf("Database loaded successfully\n");
-	}
 	stmt = 0;
 	verbosity = 2;
 	logstream = stdout;
-//	columnCount = 0;
-//	curColumn = 0;
-//	resultStr.clear();
+	rc = sqlite3_open(dbfile.c_str(), &database);
+	// anything other than 0 returned is an error code
+	if(rc != SQLITE_OK) {
+		log("There was an error loading the database: \n" + (string)sqlite3_errmsg(database) + "\n", CUSTOM_ERROR);
+	} else {
+		log("Database loaded successfully\n", OTHER);
+	}
 }
 
 Database::~Database() 
@@ -29,13 +25,16 @@ Database::~Database()
 
 void Database::log(string message, int type)
 {
-	if(type == 1 && verbosity >= 1) {
+	if(type == STANDARD_ERROR && verbosity >= 1) {
 		fprintf(logstream, "***\nError in database statement:\nStatement: %s\nError: %s\n", message.c_str(), sqlite3_errmsg(database));
 	}
-	if(type == 2 && verbosity >= 2) {
+	if(type == CUSTOM_ERROR && verbosity >= 1) {
+		fprintf(logstream, message.c_str());
+	}
+	if(type == WARNING && verbosity >= 2) {
 		fprintf(logstream, "***\nWarning for database statement:\nStatement: %s\n", message.c_str());
 	}
-	if(type == 3 && verbosity >= 3) {
+	if(type == OTHER && verbosity >= 3) {
 		fprintf(logstream, message.c_str());
 	}
 }
@@ -47,17 +46,17 @@ int Database::dml(string sql)
 
 	rc = sqlite3_prepare_v2(database, sql.c_str(), -1, &stmt, 0);
 	if(rc != SQLITE_OK) {
-		printf("***\nThere was a DML statement error:\nStatement: %s\nError: %s\n***\n", sql.c_str(), sqlite3_errmsg(database));
+		log(sql, STANDARD_ERROR);
 	} else {
-		printf("DML statement accepted\n");
+		log("DML statement accepted\n", OTHER);
 		rc = sqlite3_step(stmt);
 		if(rc != SQLITE_DONE) {
-			printf("***\nThere was a DML step error:\nStatement: %s\nError: %s\n***\n", sql.c_str(), sqlite3_errmsg(database));
+			log(sql, STANDARD_ERROR);
 		} else {
 			rc = sqlite3_finalize(stmt);
 			stmt = 0;
 			if(rc != SQLITE_OK) {
-				printf("There was an error finalizing a DML statement:\nStatement: %s\nError: %s\n", sql.c_str(), sqlite3_errmsg(database));
+				log(sql, STANDARD_ERROR);
 			}
 		}
 	}
@@ -77,7 +76,7 @@ int Database::query(string sql)
 	if(rc) {
 		log(sql, 1);
 	} else {
-		log("Query statement accepted\n", 3);
+		log("Query statement accepted\n", OTHER);
 //		columnCount = sqlite3_column_count(stmt);
 //		curColumn = 0;
 	}
@@ -143,7 +142,7 @@ int Database::importTable(string filename)
 	sql = "CREATE TABLE " + tableName + "(" + line + ");";
 	rc = dml(sql);
 	if(rc != SQLITE_OK) {
-		printf("There was an error during import of table %s:\nStatement: %s\nError: %s\n", filename.c_str(), sql.c_str(), sqlite3_errmsg(database));
+		log("There was an error during import of table " + filename + ":\nStatement: " + sql + "\nError: " + sqlite3_errmsg(database) + "\n", CUSTOM_ERROR);
 		return rc;
 	}
 /*	strBuilder = line;
@@ -180,7 +179,7 @@ int Database::importTable(string filename)
 		printf("%s\n", sql.c_str());
 		rc = dml(sql);
 		if(rc != SQLITE_OK) {
-			printf("There was an error during import of table %s:\nStatement: %s\nError: %s\n", filename.c_str(), sql.c_str(), sqlite3_errmsg(database));
+			log("There was an error during import of table " + filename + ":\nStatement: " + sql + "\nError: " + sqlite3_errmsg(database) + "\n", CUSTOM_ERROR);
 			return rc;
 		}
 	}
