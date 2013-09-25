@@ -9,7 +9,7 @@ int main() {
 
 	db->dml("drop table monster;");
 	db->importTable("tables/monster.csv");
-	db->query("select hp from monster;");
+	db->query("select * from monster;");
 	while((result = db->getNextRow()) != "") {
 		printf("%s\n", result.c_str());
 	}

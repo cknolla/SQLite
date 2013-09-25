@@ -1,4 +1,4 @@
-name varchar2(100),hp number(100),map varchar2(30)
-Goblin,150,dungeon
-Dragon,500,dungeon
-Coerl,200,desert
+name varchar2(100),hp number(100),map varchar2(30),xloc number(10),yloc number(10)
+Goblin,150,dungeon,200,-100
+Dragon,500,dungeon,300,-300
+Coerl,200,desert,250,0
