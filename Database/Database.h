@@ -31,7 +31,7 @@ private:
 
 public:
 	// construct using the provided filename as database connection
-	Database(string dbfile);
+	Database(string dbfile, string logfile = "");
 	~Database();
 
 	// Non-query statements (not needing to return anything)

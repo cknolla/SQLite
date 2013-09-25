@@ -1,17 +1,26 @@
 #include "Database.h"
 
-Database::Database(string dbfile) 
+Database::Database(string dbfile, string logfile) 
 {
 	int rc = 1; // return code
 	stmt = 0;
-	verbosity = 2;
-	logstream = stdout;
+	verbosity = 3;
+	if(logfile.empty()) {
+		logstream = stdout;
+	} else {
+		logstream = fopen(logfile.c_str(), "w");
+		if(!logstream) {
+			printf("\tError opening logfile\n");
+		} else {
+			log("\tLogfile opened successfully\n", OTHER);
+		}
+	}
 	rc = sqlite3_open(dbfile.c_str(), &database);
 	// anything other than 0 returned is an error code
 	if(rc != SQLITE_OK) {
-		log("There was an error loading the database: \n" + (string)sqlite3_errmsg(database) + "\n", CUSTOM_ERROR);
+		log("\tThere was an error loading the database: \n" + (string)sqlite3_errmsg(database) + "\n", CUSTOM_ERROR);
 	} else {
-		log("Database loaded successfully\n", OTHER);
+		log("\tDatabase loaded successfully\n", OTHER);
 	}
 }
 
@@ -21,6 +30,7 @@ Database::~Database()
 		sqlite3_finalize(stmt);
 	if(database)
 		sqlite3_close(database);
+	fclose(logstream);
 }
 
 void Database::log(string message, int type)
@@ -48,7 +58,8 @@ int Database::dml(string sql)
 	if(rc != SQLITE_OK) {
 		log(sql, STANDARD_ERROR);
 	} else {
-		log("DML statement accepted\n", OTHER);
+		log(sql + "\n", OTHER);
+		log("\tDML statement accepted\n", OTHER);
 		rc = sqlite3_step(stmt);
 		if(rc != SQLITE_DONE) {
 			log(sql, STANDARD_ERROR);
@@ -76,7 +87,8 @@ int Database::query(string sql)
 	if(rc) {
 		log(sql, 1);
 	} else {
-		log("Query statement accepted\n", OTHER);
+		log(sql + "\n", OTHER);
+		log("\tQuery statement accepted\n", OTHER);
 //		columnCount = sqlite3_column_count(stmt);
 //		curColumn = 0;
 	}
@@ -136,6 +148,8 @@ int Database::importTable(string filename)
 	int columns = 0;
 	int curCol = 0;
 
+	log("\tImporting table: " + tableName + "\n", OTHER);
+
 
 	// the first line is the table creation line with column names
 	getline(tFile, line, '\n');
@@ -167,7 +181,7 @@ int Database::importTable(string filename)
 		strBuilder.clear();
 		int found;
 		int prevPos = 0;
-		printf("%s", line.c_str());
+//		printf("%s", line.c_str());
 		while((found = line.find(',', prevPos)) != line.npos) {
 			strBuilder.append("'" + line.substr(prevPos, found-prevPos) + "',");
 			prevPos = found+1;
@@ -176,13 +190,14 @@ int Database::importTable(string filename)
 		// add the last column
 		strBuilder.append("'" + line.substr(prevPos, line.npos) + "'");
 		sql = "INSERT INTO " + tableName + " VALUES(" + strBuilder + ");";
-		printf("%s\n", sql.c_str());
+//		printf("%s\n", sql.c_str());
 		rc = dml(sql);
 		if(rc != SQLITE_OK) {
 			log("There was an error during import of table " + filename + ":\nStatement: " + sql + "\nError: " + sqlite3_errmsg(database) + "\n", CUSTOM_ERROR);
 			return rc;
 		}
 	}
+	log("\tDone importing " + tableName + "\n", OTHER);
 
 	return rc;
 }

@@ -2,14 +2,14 @@
 #include "Database.h"
 
 int main() {
-	Database* db = new Database("test.db");
+	Database* db = new Database("test.db", "dblog.log");
 	char name[100];
 	int hp = 0;
 	string result;
 
 	db->dml("drop table monster;");
 	db->importTable("tables/monster.csv");
-	db->query("select * from monster;");
+	db->query("select hp from monster;");
 	while((result = db->getNextRow()) != "") {
 		printf("%s\n", result.c_str());
 	}
