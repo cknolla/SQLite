@@ -1,0 +1,3 @@
+name varchar2(100),width number(6),height number(6)
+dungeon,500,800
+desert,800,1000

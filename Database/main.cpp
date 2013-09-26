@@ -13,7 +13,17 @@ int main() {
 	while((result = db->getNextRow()) != "") {
 		printf("%s\n", result.c_str());
 	}
-
+	db->dml("drop table map;");
+	db->importTable("tables/map.csv");
+	db->query("select * from map;");
+	while((result = db->getNextRow()) != "") {
+		printf("%s\n", result.c_str());
+	}
+	// perform a join between monster and map tables
+	db->query("select monster.name from monster, map where map.name = 'dungeon' and monster.map = map.name;");
+	while((result = db->getNextRow()) != "") {
+		printf("%s\n", result.c_str());
+	}
 	/* // store values into typed variables
 	if(result)
 		strcpy(name, result);
